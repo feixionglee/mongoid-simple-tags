@@ -32,6 +32,10 @@ module Mongoid
           self.recipient_tags.join(",") if recipient_tags
         end
         
+        def tags
+          (author_tags + recipient_tags).uniq
+        end
+        
         protected
           def rebuild_tags
             self.collection.map_reduce(
