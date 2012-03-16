@@ -104,6 +104,9 @@ module Mongoid
           tags = [tags] unless tags.is_a? Array
           criteria.in(:recipient_tags => tags).to_a
         end
+        def tagged_with(tags)
+          (author_tagged_with(tags) + recipient_tagged_with(tags).to_a).uniq
+        end
       end
       
     end
