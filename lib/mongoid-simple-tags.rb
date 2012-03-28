@@ -8,7 +8,6 @@ module Mongoid
           klass.index :author_tags
           klass.index :recipient_tags
           
-          
           klass.send :after_save, :rebuild_tags
         
           include InstanceMethods
@@ -55,45 +54,8 @@ module Mongoid
 
       module ClassMethods
         
-        def all_tags(opts={})
-          tags = Mongoid.master.collection('tags')
-          opts.merge(:sort => ["_id", :desc]) unless opts[:sort]
-          tags.find({}, opts).to_a.map!{|item| { :name => item['_id'], :count => item['value'].to_i } }
-        end
-
-        def scoped_tags(options={})
-          map = <<-MAP
-            function() { 
-              if(this.tags) {
-                this.tags.forEach( function(t) {
-                    emit(t, 1)
-                })
-              } 
-            }
-          MAP
-
-          reduce = <<-REDUCE
-            function(key,values) { 
-              var count = 0 
-              values.forEach(function(v){ 
-                count += v
-              }) 
-              return count
-            }
-          REDUCE
-
-          scope = {}
-          options.each do |key, value|
-            scope[key] = {'$in' => [value]} 
-          end
-          
-          results = self.collection.map_reduce(
-            map,
-            reduce,
-            :out => "scoped_tags",
-            :query => scope
-          )
-          results.find().to_a.map{ |item| { :name => item['_id'], :count => item['value'].to_i } }
+        def all_tags
+          (criteria.map(&:recipient_tags) + criteria.map(&:author_tags)).compact.flatten.uniq
         end
         
         def author_tagged_with(tags)
