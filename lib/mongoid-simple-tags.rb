@@ -53,7 +53,6 @@ module Mongoid
  
 
       module ClassMethods
-        
         def all_tags
           (criteria.map(&:recipient_tags) + criteria.map(&:author_tags)).compact.flatten.uniq
         end
@@ -67,7 +66,8 @@ module Mongoid
           criteria.in(:recipient_tags => tags).to_a
         end
         def tagged_with(tags)
-          (author_tagged_with(tags) + recipient_tagged_with(tags).to_a).uniq
+          ids = (author_tagged_with(tags) + recipient_tagged_with(tags)).uniq.map(&:id).map(&:to_s)
+          self.any_in _id: ids
         end
       end
       
